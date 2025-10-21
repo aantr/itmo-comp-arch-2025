@@ -209,5 +209,32 @@ module alu(op1, op2, control, result);
   // 3-битный управляющий сигнал
   input [2:0] control;
   output [7:0] result;
+  wire [7:0] add_result, sub_result, slt_result, and_result, or_result, not_and_result, not_or_result;
+  wire cout;
   
+  adder8 adder(op1, op2, add_result, cout);
+  
+  genvar i;
+  generate
+    for (i = 0; i < 8; i = i + 1) begin
+      and_gate and_gate(op1[i], op2[i], and_result[i]);
+      not_gate not_gate_and(and_result[i], not_and_result[i]);
+      or_gate or_gate(op1[i], op2[i], or_result[i]);
+      not_gate not_gate_or(or_result[i], not_or_result[i]);
+    end
+  endgenerate
+  
+  mux_3_8 output_mux(
+    and_result,
+    not_and_result,
+    or_result,
+    not_or_result,
+    add_result,
+    sub_result,
+    slt_result,
+    {8{1'b0}},
+    control,
+    result
+  );
+
 endmodule
