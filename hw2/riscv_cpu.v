@@ -22,15 +22,13 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   // данные, полученные в результате чтения из регистрового файла
   inout [31:0] register_rd1, register_rd2;
 
-   // Сигналы для извлечения полей инструкции
   wire [6:0] opcode;
   wire [4:0] rd, rs1, rs2;
   wire [2:0] funct3;
   wire [6:0] funct7;
-  wire [11:0] imm_i;
-  wire [11:0] imm_s;
+  wire [11:0] imm_lw;
+  wire [11:0] imm_sw;
   
-  // Извлечение полей инструкции
   assign opcode = instruction_memory_rd[6:0];
   assign rd = instruction_memory_rd[11:7];
   assign rs1 = instruction_memory_rd[19:15];
@@ -38,9 +36,8 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   assign funct3 = instruction_memory_rd[14:12];
   assign funct7 = instruction_memory_rd[31:25];
   
-  // Форматы immediate-значений
-  assign imm_i = instruction_memory_rd[31:20];  // I-type
-  assign imm_s = {instruction_memory_rd[31:25], instruction_memory_rd[11:7]};  // S-type
+  assign imm_lw = instruction_memory_rd[31:20];
+  assign imm_sw = {instruction_memory_rd[31:25], instruction_memory_rd[11:7]};
 
   reg [31:0] register_wd3_result;
   reg [4:0] rd_result;
@@ -93,7 +90,7 @@ always @(posedge clk) begin
         register_we3_result = 1'b1;
         case (funct3)
           3'b000: begin
-            register_wd3_result = register_rd1 + {{20{imm_i[11]}}, imm_i};
+            register_wd3_result = register_rd1 + {{20{imm_lw[11]}}, imm_lw};
           end
           default: begin
             register_wd3_result = 32'h00000000;
@@ -104,7 +101,7 @@ always @(posedge clk) begin
       7'b0000011: begin
         case (funct3)
           3'b010: begin
-            data_memory_a_result = register_rd1 + {{20{imm_i[11]}}, imm_i};
+            data_memory_a_result = register_rd1 + {{20{imm_lw[11]}}, imm_lw};
             register_we3_result = 1'b1;
             register_wd3_result = data_memory_rd;
           end
@@ -116,7 +113,7 @@ always @(posedge clk) begin
       7'b0100011: begin
         case (funct3)
           3'b010: begin
-            data_memory_a_result = register_rd1 + {{20{imm_s[11]}}, imm_s};
+            data_memory_a_result = register_rd1 + {{20{imm_sw[11]}}, imm_sw};
             data_memory_wd_result = register_rd2;
             data_memory_we_result = 1'b1;
           end
