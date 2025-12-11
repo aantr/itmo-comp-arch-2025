@@ -174,7 +174,7 @@ always @(posedge clk) begin
       // jalr
       7'b1100111 begin
         case funct3:
-          {3'b00}: begin
+          {3'b000}: begin
             pc_new_result = register_rd1 + imm_lw;
             register_wd3_result = pc + 4;
             register_we3_result = 1'b1;
