@@ -30,6 +30,7 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   wire [11:0] imm_sw;
   wire [11:0] imm_b;
   wire [19:0] imm_lui;
+  wire [19:0] imm_goto;
   
   assign opcode = instruction_memory_rd[6:0];
   assign rd = instruction_memory_rd[11:7];
@@ -48,6 +49,12 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   };
   assign imm_lui = {
     instruction_memory_rd[31:12]
+  };
+  assign imm_goto = {
+    instruction_memory_rd[20],
+    instruction_memory_rd[10:1],
+    instruction_memory_rd[11],
+    instruction_memory_rd[19:12]
   };
 
   reg [31:0] register_wd3_result;
@@ -155,6 +162,24 @@ always @(posedge clk) begin
       7'b0110111: begin
         register_wd3_result = imm_lui << 12;
         register_we3_result = 1'b1;
+      end
+
+      // jal
+      7'b1101111: begin
+        pc_new_result = pc + imm_goto;
+        register_wd3_result = pc + 4;
+        register_we3_result = 1'b1;
+      end
+
+      // jalr
+      7'b1100111 begin
+        case funct3:
+          {3'b00}: begin
+            pc_new_result = register_rd1 + imm_lw;
+            register_wd3_result = pc + 4;
+            register_we3_result = 1'b1;
+          end
+        endcase
       end
     
       default: begin
