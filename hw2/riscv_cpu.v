@@ -28,6 +28,8 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   wire [6:0] funct7;
   wire [11:0] imm_lw;
   wire [11:0] imm_sw;
+  wire [11:0] imm_b;
+  wire [19:0] imm_lui;
   
   assign opcode = instruction_memory_rd[6:0];
   assign rd = instruction_memory_rd[11:7];
@@ -38,6 +40,15 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   
   assign imm_lw = instruction_memory_rd[31:20];
   assign imm_sw = {instruction_memory_rd[31:25], instruction_memory_rd[11:7]};
+  assign imm_b = {
+    instruction_memory_rd[31], 
+    instruction_memory_rd[7], 
+    instruction_memory_rd[30:25],
+    instruction_memory_rd[11:8], 1'b0
+  };
+  assign imm_lui = {
+    instruction_memory_rd[31:12]
+  };
 
   reg [31:0] register_wd3_result;
   reg [4:0] rd_result;
@@ -90,7 +101,7 @@ always @(posedge clk) begin
         register_we3_result = 1'b1;
         case (funct3)
           3'b000: begin
-            register_wd3_result = register_rd1 + {{20{imm_lw[11]}}, imm_lw};
+            register_wd3_result = register_rd1 + imm_lw;
           end
           default: begin
             register_wd3_result = 32'h00000000;
@@ -98,10 +109,10 @@ always @(posedge clk) begin
         endcase
       end
       
-      7'b0000011: begin
+      7'b0000011: begin // sw, lw
         case (funct3)
           3'b010: begin
-            data_memory_a_result = register_rd1 + {{20{imm_lw[11]}}, imm_lw};
+            data_memory_a_result = register_rd1 + imm_lw;
             register_we3_result = 1'b1;
             register_wd3_result = data_memory_rd;
           end
@@ -113,7 +124,7 @@ always @(posedge clk) begin
       7'b0100011: begin
         case (funct3)
           3'b010: begin
-            data_memory_a_result = register_rd1 + {{20{imm_sw[11]}}, imm_sw};
+            data_memory_a_result = register_rd1 + imm_sw;
             data_memory_wd_result = register_rd2;
             data_memory_we_result = 1'b1;
           end
@@ -121,29 +132,48 @@ always @(posedge clk) begin
           end
         endcase
       end
-      
+      7'b1100011: begin // part 2 beq..
+        case ({funct3})
+          {3'b000}: begin
+            if (rs1 == rs2) begin 
+              pc_new_result = pc + imm_b;
+            end
+          end
+          {3'b001}: begin
+            if (rs1 != rs2) begin 
+              pc_new_result = pc + imm_b;
+            end
+          end
+          {3'b100}: begin
+            if (rs1 < rs2) begin 
+              pc_new_result = pc + imm_b;
+            end
+          end
+        endcase
+      end
+      // lui
+      7'b0110111: begin
+        register_wd3_result = imm_lui << 12;
+        register_we3_result = 1'b1;
+      end
+    
       default: begin
       end
     endcase
   end
   
-  // Адрес памяти инструкций
   assign pc_new = pc_new_result;
   assign instruction_memory_a = pc;
   
-  // Управление памятью данных
   assign data_memory_we = data_memory_we_result;
   assign data_memory_a = data_memory_a_result;
   assign data_memory_wd = data_memory_wd_result;
   
-  // Управление регистровым файлом
   assign register_we3 = register_we3_result;
   assign register_a1 = a1_result;
   assign register_a2 = a2_result;
   assign register_a3 = rd_result;
   
-  // Выбор источника данных для записи в регистровый файл
-  // Если read = 1, то данные берутся из памяти, иначе из ALU
   assign register_wd3 = register_wd3_result;
 
 endmodule
