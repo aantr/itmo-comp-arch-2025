@@ -67,7 +67,7 @@ module riscv_cpu(clk, pc, pc_new, instruction_memory_a, instruction_memory_rd, d
   reg [31:0] data_memory_wd_result;
   reg [31:0] data_from_mem;
 
-always @(posedge clk) begin
+always @* begin
     register_we3_result = 1'b0;
     data_memory_we_result = 1'b0;
     pc_new_result = pc + 4;

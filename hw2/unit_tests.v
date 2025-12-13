@@ -53,7 +53,7 @@ module unit_tests();
   wire [31:0] register_wd3;
 
   reg cpu_input_latch;
-
+                                                               
   reg [31:0] t_instr, t_instr2, t_pc, t_pc2;
   reg fm1, fm2, fr1, fr2, fr3;
   reg [31:0] t_mem1a, t_mem1v, t_mem1v2, t_mem2v;
@@ -118,6 +118,7 @@ module unit_tests();
           fr1, fr2, fr3, t_reg1a, t_reg1v, t_reg2a, t_reg2v, t_reg3a, t_reg3v, t_reg3v2, t_reg4v, t_reg5v,
           t_text_bytes
         } = testcases_raw[test_num];
+
         t_text_string = t_text_bytes;
 
         testcase_description = "<?undefined?>";
