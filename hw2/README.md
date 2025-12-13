@@ -43,6 +43,15 @@
 Примеры двоичного кода для запуска можно найти в [programs_samples](./programs_samples/README.md).
 Для запуска `cpu_test.v` необходимо скопировать двоичный код в [`instructions.dat`](./instructions.dat).
 
+### Unit тесты
+
+Для запуска тестов:
+```
+iverilog -g2012 -o unit_tests unit_tests.v
+./unit_tests
+```
+
+Disclaimer: прохождение всех тестов не гарантирует полный балл.
 
 ## Часть 1. Реализация базовых инструкций.
 
