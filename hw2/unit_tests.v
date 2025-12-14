@@ -53,7 +53,7 @@ module unit_tests();
   wire [31:0] register_wd3;
 
   reg cpu_input_latch;
-                                                               
+
   reg [31:0] t_instr, t_instr2, t_pc, t_pc2;
   reg fm1, fm2, fr1, fr2, fr3;
   reg [31:0] t_mem1a, t_mem1v, t_mem1v2, t_mem2v;
